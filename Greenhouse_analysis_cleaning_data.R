@@ -1,7 +1,9 @@
 #packages
 library(dplyr)
 library(tidyr)
-
+library(tidyverse)
+library(stringr)
+library(tidyverse)
 
 
 
@@ -523,3 +525,122 @@ final_data$Standing_Water[is.na(final_data$Standing_Water)] <- 0
 write.csv(final_data, "v4_1_stress_clean_10132026.csv", row.names = FALSE)
 
 ######DONE WITH V4.1 DATA######################################################
+
+
+
+
+########## STARTING V4 DATA #######################################
+v4_data<-collect_data_for_each_conetaine_2
+
+#no munsell data
+v4_data <- subset(v4_data, select=-c(`GlobalID`,`Common Colors (optional)`,`Hue (First #)`,`Letter Component of Hue`,`Value (Second #)`,`Chroma (Final #)`,ParentGlobalID, Creator, Editor))
+v4_data <- subset(v4_data, select=-c(`# of seeds germinated`))
+v4_data <- subset(v4_data, select=-c(`Height measurement 2`,`Height measurement 3`))
+
+#renaming columns
+colnames(v4_data)
+colnames(v4_data)[2]<-"ID"
+colnames(v4_data)[3]<-"leaf_count"
+colnames(v4_data)[4]<-"height"
+colnames(v4_data)[5]<-"turgor"
+colnames(v4_data)[6]<-"wilting"
+colnames(v4_data)[7]<-"discoloration/health"
+colnames(v4_data)[8]<-"leaves_dessicated"
+colnames(v4_data)[21]<-"select_apply"
+colnames(v4_data)[22]<-"notes"
+
+colnames(v4_data)[9]<-"leaf1_dessicated_per"
+colnames(v4_data)[10]<-"leaf2_dessicated_per"
+colnames(v4_data)[11]<-"leaf3_dessicated_per"
+colnames(v4_data)[12]<-"leaf4_dessicated_per"
+colnames(v4_data)[13]<-"leaf5_dessicated_per"
+colnames(v4_data)[14]<-"leaf6_dessicated_per"
+colnames(v4_data)[15]<-"leaf7_dessicated_per"
+colnames(v4_data)[16]<-"leaf8_dessicated_per"
+colnames(v4_data)[17]<-"leaf9_dessicated_per"
+colnames(v4_data)[18]<-"leaf10_dessicated_per"
+colnames(v4_data)[19]<-"leaf11_dessicated_per"
+colnames(v4_data)[20]<-"leaf12_dessicated_per"
+
+#changing NA in leaf_dessicated % to 0
+
+v4_data$leaf1_dessicated_per[is.na(v4_data$leaf1_dessicated_per)] <- 0
+v4_data$leaf2_dessicated_per[is.na(v4_data$leaf2_dessicated_per)] <- 0
+v4_data$leaf3_dessicated_per[is.na(v4_data$leaf3_dessicated_per)] <- 0
+v4_data$leaf4_dessicated_per[is.na(v4_data$leaf4_dessicated_per)] <- 0
+v4_data$leaf5_dessicated_per[is.na(v4_data$leaf5_dessicated_per)] <- 0
+v4_data$leaf6_dessicated_per[is.na(v4_data$leaf6_dessicated_per)] <- 0
+v4_data$leaf7_dessicated_per[is.na(v4_data$leaf7_dessicated_per)] <- 0
+v4_data$leaf8_dessicated_per[is.na(v4_data$leaf8_dessicated_per)] <- 0
+v4_data$leaf9_dessicated_per[is.na(v4_data$leaf9_dessicated_per)] <- 0
+v4_data$leaf10_dessicated_per[is.na(v4_data$leaf10_dessicated_per)] <- 0
+v4_data$leaf11_dessicated_per[is.na(v4_data$leaf11_dessicated_per)] <- 0
+v4_data$leaf12_dessicated_per[is.na(v4_data$leaf12_dessicated_per)] <- 0
+
+#are there any notes?
+which(!is.na(v4_data$notes))
+v4_data$notes[!is.na(v4_data$notes)]
+#just noting black spots?
+
+#fixing dates up
+v4_data$date <- as.Date(v4_data$CreationDate, format = "%m/%d/%Y %H:%M:%S")
+
+#checking for duplicates
+!any(duplicated(v4_data[, c("ID", "date")]))
+#TRUE
+View(v4_data %>%
+       add_count(ID, date) %>%
+       filter(n > 1))
+
+
+#creating columns for values in ID
+v4_data <- v4_data %>% 
+  filter(nchar(ID) >= 6)
+
+v4_data <- v4_data %>%
+  separate_wider_delim(
+    cols = ID, 
+    delim = "_", 
+    names = c("species", "soil_treatment", "seed_coating","weather_treatment","rep"),
+    cols_remove = FALSE # Keeps the original column
+  )
+
+
+#creating categories for each of the select all options
+v4_cleaned_data<-v4_data
+
+View(v4_cleaned_data[!is.na(v4_cleaned_data$select_apply), ])
+
+# 1. Ensure your original data has a unique row identifier
+v4_cleaned_data <- v4_cleaned_data %>% 
+  mutate(row_id = row_number())
+
+# 2. Extract just the values and pivot them (rows with NA will be ignored here)
+specific_columns <- v4_cleaned_data %>%
+  select(row_id, select_apply) %>% 
+  separate_longer_delim(cols = select_apply, delim = ",") %>% 
+  mutate(select_apply = str_trim(select_apply)) %>% 
+  filter(!is.na(select_apply) & select_apply != "") %>% 
+  pivot_wider(
+    names_from = select_apply, 
+    values_from = select_apply,
+    values_fn = ~ 1,     # Use ~ .x instead of ~ 1 if you want the text instead of 1s
+    values_fill = 0      # Use NA instead of 0 if you want NAs instead of 0s
+  )
+
+# 3. Join the new specific columns back to your original data
+# This guarantees that rows with NAs are preserved!
+v4_final_data <- v4_cleaned_data %>%
+  left_join(specific_columns, by = "row_id") %>% 
+  select(-row_id) # Remove the temporary row ID
+
+#changing NAs to zeros for these new columns
+v4_final_data$Artificial_Damage[is.na(v4_final_data$Artificial_Damage)] <- 0
+v4_final_data$Bent[is.na(v4_final_data$Bent)] <- 0
+
+
+#creating column for black spots
+v4_final_data$Black_spots <- as.integer(!is.na(v4_final_data$notes))
+
+#saving dataframe
+write.csv(v4_final_data, "v4_stress_clean_10132026.csv", row.names = FALSE)
