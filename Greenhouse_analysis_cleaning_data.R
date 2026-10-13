@@ -5,7 +5,7 @@ library(tidyr)
 
 
 
-#importing data
+#importing data for V4.1 !!!!*******
 
 collect_data_for_each_conetaine_2 <- read_csv("C:/Users/strublee/Desktop/Oregon State University/Thesis/Greenhouse/Data/Greenhouse_Survey_v4.1_10012026/collect_data_for_each_conetaine_2.csv")
 
@@ -477,4 +477,49 @@ write.csv(duplicates, "v4.1_duplicates_10132026.csv", row.names = FALSE)
 
 
 #creating categories for each of the select all options
-#blah
+cleaned_data<-v4_1_cleaned_data_10132026
+
+View(cleaned_data[!is.na(cleaned_data$select_apply), ])
+
+#cleaned_data <- cleaned_data %>% separate_longer_delim(cols = select_apply, delim = ",")
+
+library(tidyverse)
+library(stringr)
+library(tidyverse)
+
+# 1. Ensure your original data has a unique row identifier
+cleaned_data <- cleaned_data %>% 
+  mutate(row_id = row_number())
+
+# 2. Extract just the values and pivot them (rows with NA will be ignored here)
+specific_columns <- cleaned_data %>%
+  select(row_id, select_apply) %>% 
+  separate_longer_delim(cols = select_apply, delim = ",") %>% 
+  mutate(select_apply = str_trim(select_apply)) %>% 
+  filter(!is.na(select_apply) & select_apply != "") %>% 
+  pivot_wider(
+    names_from = select_apply, 
+    values_from = select_apply,
+    values_fn = ~ 1,     # Use ~ .x instead of ~ 1 if you want the text instead of 1s
+    values_fill = 0      # Use NA instead of 0 if you want NAs instead of 0s
+  )
+
+# 3. Join the new specific columns back to your original data
+# This guarantees that rows with NAs are preserved!
+final_data <- cleaned_data %>%
+  left_join(specific_columns, by = "row_id") %>% 
+  select(-row_id) # Remove the temporary row ID
+
+
+#changing NAs to zeros for these new columns
+final_data$Artificial_Damage[is.na(final_data$Artificial_Damage)] <- 0
+final_data$Black_Spots[is.na(final_data$Black_Spots)] <- 0
+final_data$Leaning[is.na(final_data$Leaning)] <- 0
+final_data$Bent[is.na(final_data$Bent)] <- 0
+final_data$Standing_Water[is.na(final_data$Standing_Water)] <- 0
+
+
+#saving dataframe
+write.csv(final_data, "v4_1_stress_clean_10132026.csv", row.names = FALSE)
+
+######DONE WITH V4.1 DATA######################################################
