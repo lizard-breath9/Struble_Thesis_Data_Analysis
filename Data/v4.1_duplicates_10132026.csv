@@ -1,0 +1,7 @@
+"ObjectID","species","soil_treatment","seed_coating","weather_treatment","rep","ID","leaf_count","height","turgor","wilting","discoloration/health","leaves_dessicated","leaf1_dessicated_per","leaf2_dessicated_per","leaf3_dessicated_per","leaf4_dessicated_per","leaf5_dessicated_per","leaf6_dessicated_per","leaf7_dessicated_per","leaf8_dessicated_per","leaf9_dessicated_per","leaf10_dessicated_per","leaf11_dessicated_per","leaf12_dessicated_per","select_apply","notes","CreationDate","EditDate","date","n"
+3425,"P","B","X","A","1","P_B_X_A_1",6,108,2,2,1,1,5,0,0,0,0,0,0,0,0,0,0,0,NA,NA,"9/9/2026 7:53:35 PM","9/9/2026 7:53:35 PM",2026-09-09,2
+3426,"E","B","ON","A","3","E_B_ON_A_3",5,165,2,3,1,1,5,0,0,0,0,0,0,0,0,0,0,0,NA,NA,"9/9/2026 7:53:35 PM","9/9/2026 7:53:35 PM",2026-09-09,2
+3427,"E","B","X","A","5","E_B_X_A_5",1,161,2,3,1,1,40,0,0,0,0,0,0,0,0,0,0,0,"Black_Spots",NA,"9/9/2026 7:53:35 PM","9/9/2026 7:53:35 PM",2026-09-09,2
+3473,"P","B","X","A","1","P_B_X_A_1",6,216,3,2,1,1,5,0,0,0,0,0,0,0,0,0,0,0,"Black_Spots",NA,"9/9/2026 7:53:35 PM","9/9/2026 7:53:35 PM",2026-09-09,2
+3474,"E","B","ON","A","3","E_B_ON_A_3",10,179,2,2,1,1,5,0,0,0,0,0,0,0,0,0,0,0,NA,"Three shoots, same seed","9/9/2026 7:53:35 PM","9/9/2026 7:53:35 PM",2026-09-09,2
+3475,"E","B","X","A","5","E_B_X_A_5",6,211,2,2,1,2,5,85,0,0,0,0,0,0,0,0,0,0,NA,NA,"9/9/2026 7:53:35 PM","9/9/2026 7:53:35 PM",2026-09-09,2
