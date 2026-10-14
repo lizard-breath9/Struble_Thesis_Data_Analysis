@@ -613,7 +613,11 @@ v4_1_clean %>%
 v4_1_clean$leaf_lost[v4_1_clean$ObjectID == 5856] <- 0
 
 #saving this new data frame
-write.csv(final_data, "v4_1_stress_clean_lostleafadded_10142026.csv", row.names = FALSE)
+write.csv(v4_1_clean, "v4_1_stress_clean_lostleafadded_10142026.csv", row.names = FALSE)
+
+
+
+
 
 
 ########## STARTING V4 DATA #######################################
@@ -737,3 +741,200 @@ v4_final_data <- v4_final_data %>%
 
 #saving dataframe
 write.csv(v4_final_data, "v4_stress_clean_addedlostleaf_10142026.csv", row.names = FALSE)
+
+
+
+
+
+##########DONE WITH V4.1 anf V4#####################
+
+
+
+
+
+
+################# V3 ###########################
+#importing data
+v3_data_raw <- read_csv("Greenhouse_Survey_V3_10142026/collect_data_for_each_conetaine_2.csv")
+
+
+#checking out data
+colnames(v3_data_raw)
+
+
+#separating munsell from regular data
+
+#sorting out munsell data from other and cleaning up
+v3_munsell_data<-v3_data_raw
+
+v3_munsell_data <- v3_munsell_data[!is.na(v3_munsell_data$`Hue (First #)`), ]
+
+
+#cleaning up unnecessary columns
+v3_munsell_data <- subset(v3_munsell_data, select = -c(`# of seeds germinated`, `Leaf Count`,
+                                                       `Height measurement`,`Height measurement 2`,
+                                                       `Height measurement 3`,`Radius measurement`,
+                                                       `Radius measurement 2`,`Radius measurement 3`,
+                                                       `Wilting Intensity (1-5)`,`Extent of Desiccation (1-5)`,
+                                                       `Discoloration Intensity (1-5)`,`Select All That Apply`,
+                                                       `Creator`,`Editor`,
+                                                       `Common Colors (optional)`,`GlobalID`,
+                                                       `ParentGlobalID`))
+
+
+#renaming columns
+colnames(v3_munsell_data)
+
+colnames(v3_munsell_data)[2]<-"ID"
+colnames(v3_munsell_data)[3]<-"Hue#"
+colnames(v3_munsell_data)[4]<-"Hue_letter"
+colnames(v3_munsell_data)[5]<-"Value"
+colnames(v3_munsell_data)[6]<-"Chroma"
+colnames(v3_munsell_data)[7]<-"notes"
+
+#removing rows with no color (C_D etc)
+v3_munsell_data <- v3_munsell_data %>% 
+  filter(nchar(ID) >= 6)
+
+#creating Color column
+v3_munsell_data <- v3_munsell_data %>%
+  unite("Color", `Hue#`, Hue_letter, Value, Chroma,sep = "_", na.rm = TRUE, remove = FALSE)
+
+
+#are there any notes?
+which(!is.na(v3_munsell_data$notes))
+
+View(v3_munsell_data[!is.na(v3_munsell_data$notes), ])
+#about condition of plant, which is not relevant for munsell
+
+
+#fixing dates up
+v3_munsell_data$date <- as.Date(v3_munsell_data$CreationDate, format = "%m/%d/%Y %H:%M:%S")
+
+#checking for duplicates
+!any(duplicated(v3_munsell_data[, c("ID", "date")]))
+#TRUE!
+
+#creating columns for values in ID
+v3_munsell_data <- v3_munsell_data %>%
+  separate_wider_delim(
+    cols = ID, 
+    delim = "_", 
+    names = c("species", "soil_treatment", "seed_coating","weather_treatment","rep"),
+    cols_remove = FALSE # Keeps the original column
+  )
+
+#saving data frame
+write.csv(v3_munsell_data, "v3_munsell_data_10142026.csv", row.names = FALSE)
+
+
+#now to v3 stress/regular plant data
+v3_cleaned_data<-v3_data_raw
+
+
+
+
+#separating out munsell data from stress data
+v3_cleaned_data <- v3_cleaned_data[is.na(v3_cleaned_data$`Hue (First #)`), ]
+
+
+#removing unnecessary columns
+colnames(v3_cleaned_data)
+v3_cleaned_data <- subset(v3_cleaned_data, select=-c(`GlobalID`,`# of seeds germinated`,
+                                                     `Height measurement 2`,
+                                                      `Height measurement 3`,`Hue (First #)`,
+                                                     `Letter Component of Hue`,
+                                                     `Value (Second #)`,`Chroma (Final #)`,
+                                                     ParentGlobalID, Creator, Editor,
+                                                     `Common Colors (optional)`))
+v3_cleaned_data <- subset(v3_cleaned_data, select=-c(`Radius measurement`,`Radius measurement 2`,
+                                                     `Radius measurement 3`))
+
+#renaming columns
+colnames(v3_cleaned_data)
+
+colnames(v3_cleaned_data)[2]<-"ID"
+colnames(v3_cleaned_data)[3]<-"height"
+colnames(v3_cleaned_data)[4]<-"wilting"
+colnames(v3_cleaned_data)[5]<-"dessication_extent"
+colnames(v3_cleaned_data)[6]<-"discoloration/health"
+colnames(v3_cleaned_data)[7]<-"select_apply"
+colnames(v3_cleaned_data)[8]<-"notes"
+colnames(v3_cleaned_data)[11]<-"leaf_count"
+
+#removing rows with no plants (C_D etc)
+v3_cleaned_data <- v3_cleaned_data %>% 
+  filter(nchar(ID) >= 6)
+
+#fixing dates up
+v3_cleaned_data$date <- as.Date(v3_cleaned_data$CreationDate, format = "%m/%d/%Y %H:%M:%S")
+
+#checking for duplicates
+!any(duplicated(v3_cleaned_data[, c("ID", "date")]))
+#TRUE
+
+#creating columns for values in ID
+v3_cleaned_data <- v3_cleaned_data %>%
+  separate_wider_delim(
+    cols = ID, 
+    delim = "_", 
+    names = c("species", "soil_treatment", "seed_coating","weather_treatment","rep"),
+    cols_remove = FALSE # Keeps the original column
+  )
+
+#creating categories for each of the select all options
+View(v3_cleaned_data[!is.na(v3_cleaned_data$select_apply), ])
+
+# 1. Ensure your original data has a unique row identifier
+v3_test_data<-v3_cleaned_data
+
+v3_test_data <- v3_test_data %>% 
+  mutate(row_id = row_number())
+
+# 2. Extract just the values and pivot them (rows with NA will be ignored here)
+specific_columns <- v3_test_data %>%
+  select(row_id, select_apply) %>% 
+  separate_longer_delim(cols = select_apply, delim = ",") %>% 
+  mutate(select_apply = str_trim(select_apply)) %>% 
+  filter(!is.na(select_apply) & select_apply != "") %>% 
+  pivot_wider(
+    names_from = select_apply, 
+    values_from = select_apply,
+    values_fn = ~ 1,     # Use ~ .x instead of ~ 1 if you want the text instead of 1s
+    values_fill = 0      # Use NA instead of 0 if you want NAs instead of 0s
+  )
+
+# 3. Join the new specific columns back to your original data
+# This guarantees that rows with NAs are preserved!
+v3_test_data <- v3_test_data %>%
+  left_join(specific_columns, by = "row_id") %>% 
+  select(-row_id) # Remove the temporary row ID
+
+#changing NAs to zeros for these new columns
+v3_test_data$Artificial_Damage[is.na(v3_test_data$Artificial_Damage)] <- 0
+v3_test_data$Bent[is.na(v3_test_data$Bent)] <- 0
+v3_test_data$Leaning[is.na(v3_test_data$Leaning)] <- 0
+v3_test_data$Standing_Water[is.na(v3_test_data$Standing_Water)] <- 0
+
+#checking notes
+#are there any notes?
+which(!is.na(v3_test_data$notes))
+View(v3_test_data[!is.na(v3_test_data$notes), ])
+
+#creating column for lost leaf pulled, broken, missing
+v3_test_data <- v3_test_data %>%
+  mutate(
+    leaf_lost = ifelse(grepl("pulled|broken|missing", notes, ignore.case = TRUE), 1, 0)
+  )
+
+#creating column for black spots
+v3_test_data <- v3_test_data %>%
+  mutate(
+    Black_Spots = ifelse(grepl("spots|disease", notes, ignore.case = TRUE), 1, 0)
+  )
+
+#saving dataframe
+write.csv(v3_test_data, "v3_stress_clean_10142026.csv", row.names = FALSE)
+
+
+##### DONE WITH V3 DATA ################
