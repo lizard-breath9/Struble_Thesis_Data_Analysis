@@ -524,9 +524,96 @@ final_data$Standing_Water[is.na(final_data$Standing_Water)] <- 0
 #saving dataframe
 write.csv(final_data, "v4_1_stress_clean_10132026.csv", row.names = FALSE)
 
-######DONE WITH V4.1 DATA######################################################
+##
 
+#adding lost leaf column
 
+v4_1_clean<-final_data
+View(v4_1_clean[!is.na(v4_1_clean$notes), ])
+
+v4_1_clean <- v4_1_clean %>%
+  mutate(
+    leaf_lost = ifelse(grepl("leaf", notes, ignore.case = TRUE), 1, 0)
+  )
+
+###going through to check if it was an actual leaf lost or something else
+#459 E_C_WY_D_1
+v4_1_clean %>%
+  filter(ObjectID == "459") %>%
+  pull(leaf_lost) #good
+
+#1823 P_C_WA_C_1
+v4_1_clean %>%
+  filter(ObjectID == "1823") %>%
+  pull(notes) #Plant just one desiccated leaf not actually lost leaf
+
+v4_1_clean %>%
+  filter(ObjectID == "1823") %>%
+  pull(leaf_lost) #1 incorrect
+v4_1_clean$leaf_lost[v4_1_clean$ObjectID == 1823] <- 0
+
+#2810 P_C_ON_D_1
+v4_1_clean %>%
+  filter(ObjectID == "2810") %>%
+  pull(notes) #Seed was resprouting with one prominent leaf, resulting in inaccurate leaf count not actually lost leaf
+
+v4_1_clean %>%
+  filter(ObjectID == "2810") %>%
+  pull(leaf_lost) #1 incorrect
+v4_1_clean$leaf_lost[v4_1_clean$ObjectID == 2810] <- 0
+
+#2815 E_C_ON_D_3
+v4_1_clean %>%
+  filter(ObjectID == "2815") %>%
+  pull(notes) #Unsure about leaf count, bizarre plant not actually lost leaf
+
+v4_1_clean %>%
+  filter(ObjectID == "2815") %>%
+  pull(leaf_lost) #1 incorrect
+v4_1_clean$leaf_lost[v4_1_clean$ObjectID == 2815] <- 0
+
+#4096 E_C_ON_D_3
+v4_1_clean %>%
+  filter(ObjectID == "4096") %>%
+  pull(notes) #Not sure about leaf count, bizarre plant not actually lost leaf
+
+v4_1_clean %>%
+  filter(ObjectID == "4096") %>%
+  pull(leaf_lost) #1 incorrect
+v4_1_clean$leaf_lost[v4_1_clean$ObjectID == 4096] <- 0
+
+#4194 E_C_C_H_5
+v4_1_clean %>%
+  filter(ObjectID == "4194") %>%
+  pull(notes) #Leading leaf bent not actually lost leaf
+
+v4_1_clean %>%
+  filter(ObjectID == "4194") %>%
+  pull(leaf_lost) #1 incorrect
+v4_1_clean$leaf_lost[v4_1_clean$ObjectID == 4194] <- 0
+
+#4873 P_C_OZ_H_3
+v4_1_clean %>%
+  filter(ObjectID == "4873") %>%
+  pull(notes) #Leaf was pinned between conetainers, desecration past where it was stuck not actually lost leaf
+
+v4_1_clean %>%
+  filter(ObjectID == "4873") %>%
+  pull(leaf_lost) #1 incorrect
+v4_1_clean$leaf_lost[v4_1_clean$ObjectID == 4873] <- 0
+
+#5856 E_C_ON_D_3
+v4_1_clean %>%
+  filter(ObjectID == "5856") %>%
+  pull(notes) #Can't confirm leaf count not actually lost leaf
+
+v4_1_clean %>%
+  filter(ObjectID == "5856") %>%
+  pull(leaf_lost) #1 incorrect
+v4_1_clean$leaf_lost[v4_1_clean$ObjectID == 5856] <- 0
+
+#saving this new data frame
+write.csv(final_data, "v4_1_stress_clean_lostleafadded_10142026.csv", row.names = FALSE)
 
 
 ########## STARTING V4 DATA #######################################
@@ -642,5 +729,11 @@ v4_final_data$Bent[is.na(v4_final_data$Bent)] <- 0
 #creating column for black spots
 v4_final_data$Black_spots <- as.integer(!is.na(v4_final_data$notes))
 
+#creating column for lost leaf
+v4_final_data <- v4_final_data %>%
+  mutate(
+    leaf_lost = ifelse(grepl("leaf", notes, ignore.case = TRUE), 1, 0)
+  )
+
 #saving dataframe
-write.csv(v4_final_data, "v4_stress_clean_10132026.csv", row.names = FALSE)
+write.csv(v4_final_data, "v4_stress_clean_addedlostleaf_10142026.csv", row.names = FALSE)
