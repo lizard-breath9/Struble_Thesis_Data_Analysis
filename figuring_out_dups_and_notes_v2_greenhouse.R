@@ -203,10 +203,138 @@ v2_testing_germ %>%
 #so data frames okay but still don't know which does with 24th and where extra 720 coming from?
 #think we started data collection in 7/21, could one of them be this?
 
+#maybe seeing if i can print out a pdf with all the conetainers 
+v2_trimed_germ<-v2_notes_germ
+
+v2_trimed_germ <- v2_trimed_germ %>% 
+  filter(date <= as.Date("2026-08-12"))
+
+v2_trimed_germ$CreationDate <- as.POSIXct(
+  v2_trimed_germ$CreationDate, 
+  format = "%m/%d/%Y %H:%M:%S"
+)
+v2_trimed_germ$CreationDate <- as.POSIXct(v2_trimed_germ$CreationDate)
+
+
+library(ggplot2)
+library(ggrepel)
+
+id_list <- unique(v2_trimed_germ$ID)
+
+plot_list <- lapply(id_list, function(id) {
+  
+  ggplot(
+    subset(v2_trimed_germ, ID == id),
+    aes(x = CreationDate, y = germination)
+  ) +
+    geom_point() +
+    ylim(0, 3) +
+    geom_line() +
+    geom_text_repel(
+      aes(label = format(CreationDate, "%Y-%m-%d %H:%M")),
+      size = 3,
+      box.padding = 0.5,
+      max.overlaps = Inf
+    ) +
+    theme_minimal() +
+    labs(
+      title = paste("Germination over Time (ID:", id, ")"),
+      x = "Date and Time",
+      y = "Germination"
+    ) +
+    theme(axis.text.x = element_blank())
+})
+ 
+names(plot_list) <- id_list
+
+plot_list[["E_B_S_D_3"]]
+
+
+pdf("germination_plots.pdf", width = 8, height = 5)
+
+for (id in unique(v2_trimed_germ$ID)) {
+  
+  print(
+    ggplot(
+      subset(v2_trimed_germ, ID == id),
+      aes(CreationDate, germination)
+    ) +
+      geom_point() +
+      geom_line() +
+      theme_minimal() +
+      labs(title = id)
+  )
+}
+
+dev.off()
+
+pdf("germination_plots_5.pdf", width = 8, height = 5)
+
+for (id in unique(v2_trimed_germ$ID)) {
+  
+  print(
+    ggplot(
+      subset(v2_trimed_germ, ID == id),
+      aes(x = CreationDate, y = germination)
+    ) +
+      geom_point() +
+      ylim(0, 3) +
+      geom_line() +
+      scale_x_datetime(breaks = v2_trimed_germ$CreationDate[v2_trimed_germ$ID == id], 
+                       date_labels = "%Y-%m-%d %H:%M")+
+            theme_minimal() +
+      labs(
+        title = id,
+        x = "Date and Time",
+        y = "Germination"
+      ) +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  )
+}
+
+dev.off()
+
+#ID with weird germination (goes up then down then up, completely 0)
+
+#up down end lower than it has been
+###E_B_OZ_C_1, E_B_WY_C_3, E_B_ON_C_1, E_B_C_C_5, E_B_ID_C_2, P_B_NV_C_4
+###E_B_OZ_C_4, E_B_WA_C_3, P_B_X_D_3, P_B_WA_D_1, E_B_X_D_4, E_B_S_D_5, 
+###P_B_OZ_D_5, P_B_C_H_5, E_B_WA_H_3, E_B_ID_H_4, E_B_C_H_5, E_B_ID_H_2
+###P_B_OZ_H_5, E_B_NV_A_1, E_B_WA_A_3, E_B_S_A_1, P_B_X_A_2, P_B_ON_A_1
+###P_C_WA_H_5, E_C_WA_H_3, E_C_ID_H_3, E_C_S_C_5, E_C_S_C_2, P_C_ON_D_5
+###E_C_WY_D_5, E_C_OZ_A_1, E_C_WY_A_2,P_C_WY_A_5, P_C_OZ_A_4
+#35
+
+#up down but ends at the highest it has been
+###P_B_X_C_5, P_B_ID_C_3, P_B_ID_C_2, P_B_S_C_5, P_B_S_C_3, P_B_C_C_2,
+###E_B_C_C_4, P_B_WY_C_2, E_B_X_C_4, E_B_WA_C_4, E_B_WA_D_3, E_B_X_D_2
+###P_B_NV_D_1, E_B_WY_D_2, E_B_WA_D_2, P_B_ON_D_3, E_B_ID_D_1, E_B_WA_H_4
+###E_B_NV_H_3, E_B_NV_H_5, P_B_ON_H_2, E_B_C_H_3, P_B_NV_H_2, E_B_S_H_1
+###E_B_WA_H_5, P_B_NV_H_3, P_B_OZ_H_4, P_B_X_H_1, P_B_NV_H_1, E_B_WY_H_1
+###E_B_WY_H_2, P_B_NV_H_4, E_B_X_A_3, P_B_OZ_A_2, E_B_C_A_1, E_B_ID_A_4
+###E_B_OZ_A_1, E_B_X_A_1, E_B_WY_A_5, E_B_WA_A_2, P_B_NV_A_3, E_B_ID_A_1
+###E_B_ID_A_3, E_C_ID_H_1, E_C_ON_H_4, P_C_X_H_1, E_C_C_H_5, E_C_S_H_3
+###P_C_S_H_5, E_C_S_H_2, E_C_WY_H_4, P_C_OZ_H_2, E_C_X_H_3, P_C_ID_H_1
+###E_C_NV_C_5, P_C_OZ_C_4, P_C_WY_C_3, E_C_C_C_3, E_C_WA_C_4, E_C_OZ_C_3
+###E_C_NV_C_4, E_C_WY_D_3, E_C_X_D_5, P_C_NV_D_3, E_C_NV_D_2, E_C_ID_D_5
+###E_C_OZ_D_1, P_C_ID_D_5, P_C_ON_D_3, E_C_ON_A_1, E_C_X_A_5, E_C_WA_A_2
+###E_C_S_A_2, P_C_ON_A_4, P_C_OZ_A_2, E_C_ON_A_3, E_C_X_A_3, E_C_NV_A_5
+#78
+
+#all zero
+###P_B_WY_C_3, P_B_S_C_1, E_B_ON_C_5, E_B_WY_A_3, E_C_ON_C_4, P_C_X_D_2
+###E_C_ID_A_4
+#7
+
+#total weird ones: 120
 
 
 
-#figuring out notes now...
+
+
+
+
+#######################################################figuring out notes now...
 v2_test_clean_data<-v2_clean_data_10152026
 
 #are there any notes?
