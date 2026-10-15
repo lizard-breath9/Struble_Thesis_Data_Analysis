@@ -746,7 +746,7 @@ write.csv(v4_final_data, "v4_stress_clean_addedlostleaf_10142026.csv", row.names
 
 
 
-##########DONE WITH V4.1 anf V4#####################
+##########DONE WITH V4.1 and V4#####################
 
 
 
@@ -944,4 +944,187 @@ write.csv(v3_test_data, "v3_stress_clean_10142026.csv", row.names = FALSE)
 
 
 ###### STARTING V2 DATA #######################################
-dladk
+#August 4th first normal data, before this just germiniation
+
+#importing data
+v2_raw_data <- read_csv("Greenhouse_Survey_V2_10142026/collect_data_for_each_conetaine_2.csv")
+
+
+#checking out data
+colnames(v2_raw_data)
+
+
+#splitting germination data from normal data collection
+v2_germination_data<-v2_raw_data
+
+#cleaning up unnecessary columns (basically only keeping germination as I want a solo germiniation dataframe)
+v2_germination_data <- subset(v2_germination_data, select = -c(`GlobalID`,
+                                                       `Height measurement`,`Height measurement 2`,
+                                                       `Height measurement 3`,`Radius measurement`,
+                                                       `Radius measurement 2`,`Radius measurement 3`,
+                                                       `Is the plant dead or alive?`,
+                                                       `What stress is visible?`,
+                                                       `Wilting Intensity (1-5)`,
+                                                       `Extent of shoot death (1-5)`,
+                                                       `Discoloration Intensity (1-5)`,`ParentGlobalID`,
+                                                       `Creator`,
+                                                       `Editor`, `Leaf count`,`Leaf count 2`, `Leaf count 3`))
+
+
+#renaming columns
+colnames(v2_germination_data)
+
+colnames(v2_germination_data)[2]<-"ID"
+colnames(v2_germination_data)[3]<-"germination"
+colnames(v2_germination_data)[4]<-"notes"
+
+#removing rows with no color (C_D etc)
+v2_germination_data <- v2_germination_data %>% 
+  filter(nchar(ID) >= 6)
+
+#are there any notes?
+which(!is.na(v2_germination_data$notes))
+
+View(v2_germination_data[!is.na(v2_germination_data$notes), ])
+#there's a lot of notes 1,275 will need to figure out a good way to go through them eek
+
+#fixing dates up
+v2_germination_data$date <- as.Date(v2_germination_data$CreationDate, format = "%m/%d/%Y %H:%M:%S")
+
+#checking for duplicates
+!any(duplicated(v2_germination_data[, c("ID", "date")]))
+#FALSE
+
+View(v2_germination_data %>%
+       add_count(ID, date) %>%
+       filter(n > 1))
+
+#believe duplicates are because the time is very off, so thinks 
+#some were done on the same day when they are not
+
+#creating columns for values in ID
+v2_germination_data <- v2_germination_data %>%
+  separate_wider_delim(
+    cols = ID, 
+    delim = "_", 
+    names = c("species", "soil_treatment", "seed_coating","weather_treatment","rep"),
+    cols_remove = FALSE # Keeps the original column
+  )
+
+#saving data frame
+write.csv(v2_germination_data, "v2_germination_data_10142026.csv", row.names = FALSE)
+
+
+
+#splitting normal data collection data from germination data
+v2_clean_data<-v2_raw_data
+
+#cleaning up unnecessary columns (basically only keeping germination as I want a solo germiniation dataframe)
+colnames(v2_clean_data)
+v2_clean_data <- subset(v2_clean_data, select = -c(`GlobalID`,
+                                                   `Radius measurement`,
+                                                               `Radius measurement 2`,`Radius measurement 3`,
+                                                               `Is the plant dead or alive?`,
+                                                               `What stress is visible?`,
+                                                               `Wilting Intensity (1-5)`,
+                                                               `Extent of shoot death (1-5)`,
+                                                               `Discoloration Intensity (1-5)`,`ParentGlobalID`,
+                                                               `Creator`,
+                                                               `Editor`))
+
+
+#renaming columns
+colnames(v2_clean_data)
+
+colnames(v2_clean_data)[2]<-"ID"
+colnames(v2_clean_data)[3]<-"germinated"
+colnames(v2_clean_data)[4]<-"height_one"
+colnames(v2_clean_data)[5]<-"height_two"
+colnames(v2_clean_data)[6]<-"height_three"
+colnames(v2_clean_data)[7]<-"notes"
+colnames(v2_clean_data)[10]<-"leaf_count_one"
+colnames(v2_clean_data)[12]<-"leaf_count_two"
+colnames(v2_clean_data)[12]<-"leaf_count_three"
+
+#removing rows with no color (C_D etc)
+v2_clean_data <- v2_clean_data %>% 
+  filter(nchar(ID) >= 6)
+
+#fixing dates up
+v2_clean_data$date <- as.Date(v2_clean_data$CreationDate, format = "%m/%d/%Y %H:%M:%S")
+
+#removing data with only germination
+#heights start on the 29th (on the data sheet, but I think this is supposed to be the 28th and the dates are weird)
+#height on 29th in AM heights (acutally 7/28), but 29th in PM is not (is actualy 7/29)
+#heights also on 8/1 (in the AM) (which should be 7/31), but some do not have this data, since the dates are all mess up (8/1 PM)
+#heights on 8/1 AM = 7/31, germination data in PM = 8/1
+#8/2 missing?
+#heights on 8/4 (correct day) - emergence stops this day
+#8/5 has only germination data - think I did this to check after fertilizer application
+#heights on 8/7 (correct day) - some on 8/8 but i think they are the same day 8/7 since is in the AM
+#heights on 8/11 (correct day) - also has some on 8/12 but in AM so think its same day
+#8/12 - thinned
+#8/14 heights (correct day)
+#heights on 8/18 (correct day)
+#heights on 8/21 (correct day)
+#dates until 8/21
+
+v2_clean_data_test<-v2_clean_data
+
+#can remove all before 7/29 because no height data collected before this
+v2_clean_data_test <- v2_clean_data_test %>% 
+  filter(date >= as.Date("2026-07-29"))
+
+#data collection on 8/1 (AM) and 8/4 with germination data in between that needs to be removed?
+
+#removing 7/29 PM data^, 7/30/2026 7:00:47 PM^, 8/1/2026 7:55:27 PM^, 8/3/2026 7:58:24 PM^, 
+#8/3/2026 7:58:27 PM^, 8/5/2026 7:14:32 PM
+unique(v2_clean_data_test$CreationDate)
+#7/29/2026 10:37:29 PM
+
+# 1. Convert your column to a proper date-time object (MDY + HMS format)
+# Replace 'df' with your actual dataset name, and 'your_column' with your actual column name
+v2_clean_data_test <- v2_clean_data_test %>%
+  mutate(CreationDate = mdy_hms(CreationDate))
+
+# 2. Define the exact date and time you want to remove
+target_time <- mdy_hms("8/5/2026 7:14:32 PM")
+
+# 3. Filter out that specific timestamp
+v2_clean_data_test <- v2_clean_data_test %>%
+  filter(CreationDate != target_time)
+
+#should have 8*720 left = 5760 (correct)
+
+#creating columns for values in ID
+v2_clean_data_test <- v2_clean_data_test %>%
+  separate_wider_delim(
+    cols = ID, 
+    delim = "_", 
+    names = c("species", "soil_treatment", "seed_coating","weather_treatment","rep"),
+    cols_remove = FALSE # Keeps the original column
+  )
+
+#are there any notes?
+which(!is.na(v2_clean_data_test$notes))
+
+View(v2_clean_data_test[!is.na(v2_clean_data_test$notes), ])
+#there's a lot of notes 1,194 will need to figure out a good way to go through them eek
+
+#checking for duplicates
+!any(duplicated(v2_clean_data_test[, c("ID", "date")]))
+#FALSE
+
+View(v2_clean_data_test %>%
+       add_count(ID, date) %>%
+       filter(n > 1))
+
+v2_lookingaround<-v2_clean_data_test
+View(v2_lookingaround %>%
+       add_count(ID, date) %>%
+       filter(n > 1))
+
+#there are 540 duplicates, could be same issue where because times are weird, could be thinking 2 collected on same day
+
+#saving data frame
+write.csv(v2_clean_data_test, "v2_clean_data_10152026.csv", row.names = FALSE)
