@@ -1,4 +1,8 @@
-#####Figuring out notes and duplicates for V2 data#####
+#####Figuring out notes and duplicates for V2 data##### 
+
+
+###################LOOK AT DATA WITH SURVEY AND TRAY DATES ADDED, SOLVES DUPLICATES###########
+#just kept this for reference 
 v2_germination_data_10142026 <- read_csv("v2_germination_data_10142026.csv")
 v2_clean_data_10152026 <- read_csv("v2_clean_data_10152026.csv")
 
@@ -476,3 +480,101 @@ august5 <- v2_notes_germ %>%
 View(august5[!is.na(august5$notes), ])
 
 #nothing to note for germination in the notes it seems
+
+
+
+
+
+
+
+
+
+###############using dataframe with everything combined from tray and survey
+colnames(v2_germ_combined)
+
+#changing survey_creationdate to better format
+v2_germ_combined$survey_creationdate <- as.POSIXct(
+  v2_germ_combined$survey_creationdate, 
+  format = "%m/%d/%Y %H:%M:%S"
+)
+v2_germ_combined$survey_creationdate <- as.POSIXct(v2_germ_combined$survey_creationdate)
+
+#plotting for each ID with germination and survey date
+id_list <- unique(v2_germ_combined$ID)
+
+plot_list <- lapply(id_list, function(id) {
+  
+  ggplot(
+    subset(v2_germ_combined, ID == id),
+    aes(x = survey_creationdate, y = germination)
+  ) +
+    geom_point() +
+    ylim(0, 3) +
+    geom_line() +
+    geom_text_repel(
+      aes(label = format(survey_creationdate, "%Y-%m-%d %H:%M:%S")),
+      size = 3,
+      box.padding = 0.5,
+      max.overlaps = Inf
+    ) +
+    theme_minimal() +
+    labs(
+      title = paste("Germination over Time (ID:", id, ")"),
+      x = "Date and Time",
+      y = "Germination"
+    ) +
+    theme(axis.text.x = element_blank())
+})
+
+names(plot_list) <- id_list
+
+plot_list[["E_B_S_D_3"]]
+
+#creating pdf with all germ plots
+pdf("germination_plots_withnames.pdf", width = 8, height = 5)
+
+for (id in unique(v2_germ_combined$ID)) {
+  
+  print(
+    ggplot(
+      subset(v2_germ_combined, ID == id),
+      aes(x = survey_creationdate, y = germination, color=collector_name)
+    ) +
+      geom_point() +
+      ylim(0, 3) +
+      geom_line() +
+      scale_x_datetime(breaks = v2_germ_combined$survey_creationdate[v2_germ_combined$ID == id], 
+                       date_labels = "%Y-%m-%d %H:%M:%S")+
+      theme_minimal() +
+      labs(
+        title = id,
+        x = "Date and Time",
+        y = "Germination"
+      ) +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  )
+}
+
+dev.off()
+
+
+#checking for duplicates
+!any(duplicated(v2_germ_combined[, c("ID", "survey_creationdate")]))
+#TRUE!
+
+
+table(v2_germ_combined$survey_creationdate)
+unique(v2_germ_combined$survey_creationdate)
+
+test<-v2_germ_combined
+test <- test[order(test$survey_date_time), ]
+
+#survey data_time fixes date issue, USE THIS DATE###### although mixed up
+
+test$survey_date_time <- as.POSIXct(
+  test$survey_date_time, 
+  format = "%m/%d/%Y %H:%M:%S"
+)
+test$survey_date_time <- as.POSIXct(test$survey_date_time)
+
+test <- test[order(test$survey_date_time), ]
