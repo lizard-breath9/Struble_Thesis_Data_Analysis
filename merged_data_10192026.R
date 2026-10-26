@@ -278,7 +278,8 @@ table[table > 30]
 #same dups greater than 30
 
 #date stuff
-merged_combined_data$date <- as.Date(merged_combined_data$survey_date_time, format = "%Y/%m/%d %H:%M:%S")
+merged_combined_data$date <- as.Date(merged_combined_data$survey_date_time, format = "%m/%dY/%
+                                     %H:%M:%S")
 merged_combined_data <- merged_combined_data[order(merged_combined_data$survey_date_time), ]
 
 
@@ -3184,14 +3185,14 @@ dev.off()
 #fixed all of them
 
 #merging fixed germination into big dataframe
-test<-data_all
+test<-data_all_10212026
 test <- test %>%
   left_join(
     germ_data %>% select(ID, date, germinated, !any_of(names(test))), 
     by = c("ID", "date")
   )
 
-colnames(test)[82]<-"corrected_germ"
+colnames(test)[79]<-"corrected_germ"
 
 #adding ratio for number germinated out of 3
 test$germ_ratio_correct<-test$corrected_germ/3 
@@ -3220,182 +3221,6 @@ first_germination_by_pot <- test %>%
 test<-merge(test, first_germination_by_pot, by = "ID", all.x = TRUE)
   
   
+write.csv(test, "data_all_germ_corrected_10262026.csv", row.names = FALSE)
 
-
-
-
-#looking at other factors?
-  
-  
-  
-  
-  
-#checking out the data
-library(vegan)
-library(pastecs)
-library(corrplot)
-library(ggplot2)
-library(ggpubr)
-
-#POSE data first
-summary(data_all$height[data_all$species == "P"])
-#max height is 886 no way
-
-data_all %>%
-  filter(species == "P") %>%
-  slice_max(height, n = 1, with_ties = TRUE) %>%
-  pull(ID)
-#"P_B_NV_D_5" 1909
-#gonna guess this was supposed to be 86
-
-data_all %>%
-  filter(ID == "P_B_NV_D_5") %>%
-  pull(height)
-#205,886,0
-
-ggplot(subset(data_all, ID == "P_B_NV_D_5"), 
-       aes(x = date, y = height)) +
-  geom_point() +
-  geom_line() + # Optional: connects the points chronologically
-  scale_x_datetime(breaks = data_all$date[data_all$ID == "P_B_NV_D_5"], 
-                   date_labels = "%Y-%m-%d") + 
-  theme_minimal() +
-  labs(title = "Height over Time (ID: P_B_NV_D_5)",
-       x = "Date",
-       y = "Color") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-data_all$height[data_all$ID == "P_B_NV_D_5" & data_all$date == as.Date("2026-09-04")] <- 86
-summary(data_all$height[data_all$species == "P"])
-
-#now looking at ELEL data
-summary(data_all$height[data_all$species == "E"])
-
-#checking something with dates
-table(data_all$date)
-
-#missing 44 entries on 9/1
-test<-data_all
-data_all <- data_all %>%
-  mutate(date = if_else(date == as.Date("2026-09-30"), as.Date("2026-09-29"), date))
-
-#final data set
-final_data <- subset(data_all, date == as.Date("2026-09-29"))
-
-#height POSE
-hist(final_data$height[final_data$species=="P"])
-summary.lm(aov(height[final_data$species=="P"]~ seed_coating[final_data$species=="P"], data = final_data))
-#overall not sig
-#ID  marginally sig 0.0693
-#X  marginally sig 0.0798 
-summary.lm(aov(height[final_data$species=="P"]~ soil_treatment[final_data$species=="P"], data = final_data))
-#sig 0.00962 
-summary.lm(aov(height[final_data$species=="P"]~ weather_treatment[final_data$species=="P"], data = final_data))
-#sig 2.972e-07
-
-#height ELEL
-hist(final_data$height[final_data$species=="E"])
-summary.lm(aov(height[final_data$species=="E"]~ seed_coating[final_data$species=="E"], data = final_data))
-#overall not sig
-#ON    marginally sig 0.0925  
-#WA       marginally sig 0.0922 
-#X marginally sig 0.0914 
-#WY sig 0.0407 
-summary.lm(aov(height[final_data$species=="E"]~ soil_treatment[final_data$species=="E"], data = final_data))
-#sig 0.000507  
-summary.lm(aov(height[final_data$species=="E"]~ weather_treatment[final_data$species=="E"], data = final_data))
-#sig 1.241e-14
-
-
-
-#leaf count POSE
-library(performance)
-lc_model<-glm(leaf_count ~ seed_coating, family = quasipoisson, data = subset(final_data, species == "P"))
-check_overdispersion(lc_model)
-#yep
-summary(lc_model)
-#not sig
-lc_model<-glm(leaf_count ~ soil_treatment, family = quasipoisson, data = subset(final_data, species == "P"))
-check_overdispersion(lc_model)
-#yep
-summary(lc_model)
-#not sig
-lc_model<-glm(leaf_count ~ weather_treatment, family = quasipoisson, data = subset(final_data, species == "P"))
-check_overdispersion(lc_model)
-#yep
-summary(lc_model)
-#sig
-
-
-#leaf count ELEL
-lc_model<-glm(leaf_count ~ seed_coating, family = poisson, data = subset(final_data, species == "E"))
-check_overdispersion(lc_model)
-#no
-summary(lc_model)
-#not sig
-lc_model<-glm(leaf_count ~ soil_treatment, family = poisson, data = subset(final_data, species == "E"))
-check_overdispersion(lc_model)
-#no
-summary(lc_model)
-#not sig
-lc_model<-glm(leaf_count ~ weather_treatment, family = poisson, data = subset(final_data, species == "E"))
-check_overdispersion(lc_model)
-#no
-summary(lc_model)
-#sig
-
-
-
-
-
-
-
-
-
-
-
-
-summary.lm(aov(leaf_count[subset_testdata$species=="E"]~ weather_treatment[subset_testdata$species=="E"], data = subset_testdata))
-#POSE weathertreatment with leaves dessicated, height, leaf count turgor,`discoloration/health`, wilting sig
-
-p1<-ggplot(subset(subset_testdata, species == "P"), aes(x= weather_treatment, y=height,fill=weather_treatment)) + 
-  geom_boxplot() +scale_fill_manual(values=c("#4daf4a","#377eb8","#984ea3","brown"))
-p1
-
-summary.lm(aov(leaves_dessicated[subset_testdata$species=="P"]~ weather_treatment[subset_testdata$species=="P"]*
-                 soil_treatment[subset_testdata$species=="P"], 
-               data = subset_testdata))
-
-summary(lm(height[subset_testdata$species=="P"]~
-             soil_treatment[subset_testdata$species=="P"], 
-           data = subset_testdata))
-#POSE leaves_dessicated, height, turgor, `discoloration/health` sig with soil treatment
-#ELEL height super sig with soil treatment
-
-p1<-ggplot(subset(subset_testdata, species == "E"), aes(x= soil_treatment,
-                                                        y=height,
-                                                        fill=soil_treatment)) + 
-  geom_boxplot() +scale_fill_manual(values=c("#4daf4a","#377eb8"))
-p1
-
-
-p1<-ggplot(subset(subset_testdata, species == "E"), aes(x= soil_treatment,
-                                                        y=height,
-                                                        fill=weather_treatment)) + 
-  geom_boxplot()
-p1
-
-
-
-summary.lm(aov(leaf_count[subset_testdata$species=="P"]~ weather_treatment[subset_testdata$species=="P"]*
-                 soil_treatment[subset_testdata$species=="P"]*seed_coating[subset_testdata$species=="P"], 
-               data = subset_testdata))
-#interaction of all three had effect on leaf count for pose
-
-
-p1<-ggplot(subset(subset_testdata, species == "P"), aes(x= seed_coating,
-                                                        y=leaf_count,
-                                                        fill=weather_treatment)) + 
-  geom_boxplot() +
-  facet_wrap(~ paste("soil_treatment:", soil_treatment))
-p1
+write.csv(germ_data, "germ_corrections_10262026.csv", row.names = FALSE)
