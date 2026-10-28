@@ -103,63 +103,6 @@ for (id in unique(merged_data$ID)) {
 
 dev.off()
 
-
-hist(merged_data$height[merged_data$date=="2026-09-30" | merged_data$date=="2026-09-29"])
-
-subset_testdata <- subset(merged_data, date %in% c("2026-09-30", "2026-09-29"))
-
-summary.lm(aov(leaf_count[subset_testdata$species=="P"]~ seed_coating[subset_testdata$species=="P"], data = subset_testdata))
-#ELEL leaf count marginally with ID and WY, height sig with WY + marginally with ON, 
-
-summary.lm(aov(leaf_count[subset_testdata$species=="E"]~ weather_treatment[subset_testdata$species=="E"], data = subset_testdata))
-#POSE weathertreatment with leaves dessicated, height, leaf count turgor,`discoloration/health`, wilting sig
-
-p1<-ggplot(subset(subset_testdata, species == "P"), aes(x= weather_treatment, y=height,fill=weather_treatment)) + 
-  geom_boxplot() +scale_fill_manual(values=c("#4daf4a","#377eb8","#984ea3","brown"))
-p1
-
-summary.lm(aov(leaves_dessicated[subset_testdata$species=="P"]~ weather_treatment[subset_testdata$species=="P"]*
-                 soil_treatment[subset_testdata$species=="P"], 
-               data = subset_testdata))
-
-summary(lm(height[subset_testdata$species=="P"]~
-                 soil_treatment[subset_testdata$species=="P"], 
-               data = subset_testdata))
-#POSE leaves_dessicated, height, turgor, `discoloration/health` sig with soil treatment
-#ELEL height super sig with soil treatment
-
-p1<-ggplot(subset(subset_testdata, species == "E"), aes(x= soil_treatment,
-                                y=height,
-                                fill=soil_treatment)) + 
-  geom_boxplot() +scale_fill_manual(values=c("#4daf4a","#377eb8"))
-p1
-
-
-p1<-ggplot(subset(subset_testdata, species == "E"), aes(x= soil_treatment,
-                                                        y=height,
-                                                        fill=weather_treatment)) + 
-  geom_boxplot()
-p1
-
-
-
-summary.lm(aov(leaf_count[subset_testdata$species=="P"]~ weather_treatment[subset_testdata$species=="P"]*
-      soil_treatment[subset_testdata$species=="P"]*seed_coating[subset_testdata$species=="P"], 
-    data = subset_testdata))
-#interaction of all three had effect on leaf count for pose
-
-
-p1<-ggplot(subset(subset_testdata, species == "P"), aes(x= seed_coating,
-                                                        y=leaf_count,
-                                                        fill=weather_treatment)) + 
-  geom_boxplot() +
-  facet_wrap(~ paste("soil_treatment:", soil_treatment))
-p1
-
-
-
-
-
 #combining all versions with combined survey, tray, and cone data
 v2_combined
 v3_combined
@@ -3184,6 +3127,14 @@ dev.off()
 
 #fixed all of them
 
+
+
+
+
+
+
+
+
 #merging fixed germination into big dataframe
 test<-data_all_10212026
 test <- test %>%
@@ -3224,3 +3175,6 @@ test<-merge(test, first_germination_by_pot, by = "ID", all.x = TRUE)
 write.csv(test, "data_all_germ_corrected_10262026.csv", row.names = FALSE)
 
 write.csv(germ_data, "germ_corrections_10262026.csv", row.names = FALSE)
+
+
+

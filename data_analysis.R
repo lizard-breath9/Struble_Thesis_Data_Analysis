@@ -94,10 +94,10 @@ p1
 #leaf count
 summary(data$leaf_count[data$species == "E"])
 summary(data$leaf_count[data$species == "P"])
-lc_model<-glm(leaf_count ~ seed_coating, family = quasipoisson, data = subset(final_data, species == "P"))
+lc_model<-glm(leaves_desiccated ~ seed_coating, family = poisson, data = subset(final_data, species == "P"))
 check_overdispersion(lc_model) #yep
 summary(lc_model)
-lc_model<-glm(leaf_count ~ seed_coating, family = poisson, data = subset(final_data, species == "E"))
+lc_model<-glm(leaves_desiccated ~ seed_coating, family = poisson, data = subset(final_data, species == "E"))
 check_overdispersion(lc_model) #no
 summary(lc_model)
 
@@ -505,7 +505,7 @@ summary.lm(aov(height[final_data$species=="P"]~
                data = final_data))
 #not sig
 summary.lm(aov(height[final_data$species=="E"]~ 
-                 weather_treatment[final_data$species=="E"]*seed_coating[final_data$species=="P"],
+                 weather_treatment[final_data$species=="E"]*seed_coating[final_data$species=="E"],
                data = final_data))
 #a few sig interactions, OZ+H,S+H, 
 
@@ -585,7 +585,7 @@ p1<-ggplot(ELEL_germ_data, aes(x= weather_treatment, y=correct_days_to_first_ger
 p1
 
 #interaction?
-summary.lm(aov(log(correct_days_to_first_germ)
+summary.lm(aov(correct_days_to_first_germ
                ~ weather_treatment*seed_coating, data = ELEL_germ_data)) #some interactions
 
 p1<-ggplot(ELEL_germ_data, aes(x= weather_treatment, y=correct_days_to_first_germ,fill=seed_coating)) + 
