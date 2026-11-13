@@ -10,14 +10,17 @@ test <- test %>%
                                           leaf11_dessicated_per,leaf12_dessicated_per)/leaf_count, 
                                      na.rm = TRUE))
 
+#loading in most updated data
+updated_data <- read_csv("added_growth_rates_data_10302026.csv")
+
 #creating data sets for before weather treatment #date 8/21
-before_weather <- subset(test, date == as.Date("2026-08-21"))
+before_weather <- subset(updated_data, date == as.Date("2026-08-21"))
 
 #creating data sets for final weather treatment #date 9/15
-after_weather <- subset(test, date == as.Date("2026-09-15"))
+after_weather <- subset(updated_data, date == as.Date("2026-09-15"))
 
 #final data
-final_data <- subset(test, date == as.Date("2026-09-29"))
+final_data <- subset(updated_data, date == as.Date("2026-09-29"))
 
 #saving these data frames
 write.csv(test, "data_added_plant_desiccation_10272026.csv", row.names=FALSE)
